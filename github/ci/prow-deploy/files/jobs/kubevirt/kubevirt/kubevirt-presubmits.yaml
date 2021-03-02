@@ -65,7 +65,22 @@ presubmits:
             - "/usr/local/bin/runner.sh"
             - "/bin/sh"
             - "-c"
-            - "export TARGET=k8s-1.19 && automation/test.sh"
+            - >
+              kubevirt_path=${PWD} &&
+              pr=555 &&
+              tmp=$(mktemp -d /tmp/cluster-up.XXXX) &&
+              cd $tmp &&
+              git clone "https://github.com/kubevirt/kubevirtci" --branch master --depth 1  &&
+              cd kubevirtci  &&
+              git fetch "https://github.com/kubevirt/kubevirtci" "pull/$pr/head:pr$pr"  &&
+              git checkout "pr$pr"  &&
+              kubevirtci_git_hash=$(git rev-parse HEAD)  &&
+              rm -rf $kubevirt_path/cluster-up &&
+              mv cluster-up $kubevirt_path/cluster-up  &&
+              cd $kubevirt_path &&
+              rm -rf $tmp;
+              export TARGET=k8s-1.19;
+              automation/test.sh
           # docker-in-docker needs privileged mode
           securityContext:
             privileged: true
